@@ -1,46 +1,49 @@
-import requests
-import urllib.parse
-from config import geocode_url
+def get_route(orig, dest, key, vehicle):
+    op = f"&point={orig[1]}%2C{orig[2]}"
+    dp = f"&point={dest[1]}%2C{dest[2]}"
 
-def geocoding(location, key):
-    while location == "":
-        location = input("Enter the location again: ")
+    params = {
+        "key": key,
+        "vehicle": vehicle,
+        "algorithm": "alternative_route"  # NEW FEATURE
+    }
 
-    url = geocode_url + urllib.parse.urlencode({
-        "q": location,
-        "limit": "1",
-        "key": key
-    })
+    paths_url = route_url + urllib.parse.urlencode(params) + op + dp
+    response = requests.get(paths_url)
+    return response.status_code, response.json(), paths_url
 
-    replydata = requests.get(url)
-    json_data = replydata.json()
-    json_status = replydata.status_code
 
-    if json_status == 200 and len(json_data["hits"]) != 0:
-        lat = json_data["hits"][0]["point"]["lat"]
-        lng = json_data["hits"][0]["point"]["lng"]
-        name = json_data["hits"][0]["name"]
-        value = json_data["hits"][0]["osm_value"]
+# Inside your main loop:
+if paths_status == 200:
+    km, miles = convert_distance(paths_data["paths"][0]["distance"])
+    hr, min, sec = format_time(paths_data["paths"][0]["time"])
 
-        country = json_data["hits"][0].get("country", "")
-        state = json_data["hits"][0].get("state", "")
+    print(f"Distance Traveled: {miles:.1f} miles / {km:.1f} km")
+    print(f"Trip Duration: {hr:02d}:{min:02d}:{sec:02d}")
+    print("=================================================")
 
-        if state and country:
-            new_loc = name + ", " + state + ", " + country
-        elif state:
-            new_loc = name + ", " + country
-        else:
-            new_loc = name
+    for instr in paths_data["paths"][0]["instructions"]:
+        path_text = instr["text"]
+        dist_km, dist_miles = convert_distance(instr["distance"])
+        print(f"{path_text} ({dist_km:.1f} km / {dist_miles:.1f} miles)")
 
-        print("Geocoding API URL for " + new_loc +
-              " (Location Type: " + value + ")\n" + url)
-    else:
-        lat = "null"
-        lng = "null"
-        new_loc = location
+    # Cost estimation
+    fuel_price = 0
+    if vehicle == "car":
+        try:
+            fuel_price = float(input("Enter fuel price per liter (₱): "))
+        except ValueError:
+            print("Invalid input, assuming ₱0.")
 
-        if json_status != 200:
-            print("Geocode API status: " + str(json_status) +
-                  "\nError message: " + json_data["message"])
+    trip_cost = estimate_cost(km, vehicle, fuel_price)
+    print(f"Estimated Trip Cost: ₱{trip_cost:.2f}")
+    print("=============================================")
 
-    return json_status, lat, lng, new_loc
+    # Save history
+    history.append({"from": orig[3], "to": dest[3], "distance": km})
+
+    # Print route history once
+    print("\nRoute History:")
+    for h in history:
+        print(f"{h['from']} -> {h['to']} ({h['distance']:.1f} km)")
+    print("=============================================")
