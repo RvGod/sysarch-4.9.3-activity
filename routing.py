@@ -9,6 +9,7 @@ def get_route(orig, dest, key, vehicle):
     paths_url = route_url + urllib.parse.urlencode({
         "key": key,
         "vehicle": vehicle
+        "algorithm": "alternative_route" #NEW FEATURE
     }) + op + dp
 
     response = requests.get(paths_url)
