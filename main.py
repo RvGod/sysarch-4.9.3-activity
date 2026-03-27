@@ -44,8 +44,8 @@ while True:
         print("Directions from " + orig[3] + " to " + dest[3] + " by " + vehicle)
         print("=================================================")
 
-        if paths_status == 200:
-        for i, path in enumerate(paths_data["paths"]):
+       if paths_status == 200:
+       for i, path in enumerate(paths_data["paths"]):
             km = path["distance"] / 1000
             miles = km / 1.61
 
