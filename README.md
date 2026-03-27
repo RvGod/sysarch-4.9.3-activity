@@ -1,4 +1,4 @@
-<img width="782" height="103" alt="image" src="https://github.com/user-attachments/assets/8a8e9030-6cd5-4b96-94b9-f5ceccc0d9ea" />**GraphHopper Route Planner**
+**GraphHopper Route Planner**
 
 &#x09;A Python-based Command Line Interface (CLI) tool that provides turn-by-turn navigation, distance, and travel time between two locations. It utilizes the GraphHopper Geocoding API to resolve location names and the Routing API to calculate the best path based on different vehicle profiles.
 
