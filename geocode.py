@@ -3,44 +3,43 @@ import urllib.parse
 from config import geocode_url
 
 def geocoding(location, key):
-    while location == "":
+    while location.strip() == "":
         location = input("Enter the location again: ")
 
-    url = geocode_url + urllib.parse.urlencode({
+    url = geocode_url + "?" + urllib.parse.urlencode({
         "q": location,
-        "limit": "1",
+        "limit": 1,
         "key": key
     })
 
-    replydata = requests.get(url)
-    json_data = replydata.json()
-    json_status = replydata.status_code
+    try:
+        response = requests.get(url)
+    except requests.exceptions.RequestException:
+        print("Connection error")
+        return 0, None, None, location
 
-    if json_status == 200 and len(json_data["hits"]) != 0:
-        lat = json_data["hits"][0]["point"]["lat"]
-        lng = json_data["hits"][0]["point"]["lng"]
-        name = json_data["hits"][0]["name"]
-        value = json_data["hits"][0]["osm_value"]
+    try:
+        json_data = response.json()
+    except:
+        print("Invalid JSON response")
+        return response.status_code, None, None, location
 
-        country = json_data["hits"][0].get("country", "")
-        state = json_data["hits"][0].get("state", "")
+    if response.status_code == 200 and json_data.get("hits"):
+        hit = json_data["hits"][0]
 
-        if state and country:
-            new_loc = name + ", " + state + ", " + country
-        elif state:
-            new_loc = name + ", " + country
-        else:
-            new_loc = name
+        lat = hit["point"]["lat"]
+        lng = hit["point"]["lng"]
+        name = hit.get("name", location)
 
-        print("Geocoding API URL for " + new_loc +
-              " (Location Type: " + value + ")\n" + url)
+        country = hit.get("country", "")
+        state = hit.get("state", "")
+
+        new_loc = ", ".join(filter(None, [name, state, country]))
+
+        print(f"Geocoding API URL for {new_loc}:\n{url}")
+
+        return 200, lat, lng, new_loc
+
     else:
-        lat = "null"
-        lng = "null"
-        new_loc = location
-
-        if json_status != 200:
-            print("Geocode API status: " + str(json_status) +
-                  "\nError message: " + json_data["message"])
-
-    return json_status, lat, lng, new_loc
+        print("Geocoding failed:", json_data.get("message", "Unknown error"))
+        return response.status_code, None, None, location
