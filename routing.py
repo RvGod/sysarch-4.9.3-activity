@@ -3,14 +3,28 @@ import urllib.parse
 from config import route_url
 
 def get_route(orig, dest, key, vehicle):
-    op = "&point=" + str(orig[1]) + "%2C" + str(orig[2])
-    dp = "&point=" + str(dest[1]) + "%2C" + str(dest[2])
-
-    paths_url = route_url + urllib.parse.urlencode({
+    params = {
         "key": key,
-        "vehicle": vehicle
-        "algorithm": "alternative_route" #NEW FEATURE
-    }) + op + dp
+        "vehicle": vehicle,
+        "algorithm": "alternative_route",
+        "point": [
+            f"{orig[1]},{orig[2]}",
+            f"{dest[1]},{dest[2]}"
+        ]
+    }
 
-    response = requests.get(paths_url)
-    return response.status_code, response.json(), paths_url
+    query = urllib.parse.urlencode(params, doseq=True)
+    url = route_url + "?" + query
+
+    try:
+        response = requests.get(url)
+    except requests.exceptions.RequestException:
+        print("Connection error")
+        return 0, {"message": "Connection error"}, url
+
+    try:
+        data = response.json()
+    except:
+        data = {"message": "Invalid API response"}
+
+    return response.status_code, data, url
