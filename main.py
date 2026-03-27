@@ -1,6 +1,10 @@
 from config import key
 from geocode import geocoding
 from routing import get_route
+import webbrowser
+
+
+history = [] 
 
 while True:
     print("\n+++++++++++++++++++++++++++++++++++++++++++++")
@@ -48,6 +52,25 @@ while True:
             min = int(paths_data["paths"][0]["time"]/1000/60 % 60)
             hr = int(paths_data["paths"][0]["time"]/1000/60/60)
 
+            history.append({
+                "from": orig[3],
+                "to": dest[3],
+                "distance": km
+            })
+
+            mode_map = {
+                "car": "driving",
+                "bike": "bicycling",
+                "foot": "walking"
+            }
+
+            travel_mode = mode_map.get(vehicle, "driving")
+
+            maps_url = f"https://www.google.com/maps/dir/?api=1&origin={orig[1]},{orig[2]}&destination={dest[1]},{dest[2]}&travelmode={travel_mode}"
+
+            webbrowser.open(maps_url)
+            print("Open in browser:", maps_url)
+
             print("Distance Traveled: {0:.1f} miles / {1:.1f} km".format(miles, km))
             print("Trip Duration: {0:02d}:{1:02d}:{2:02d}".format(hr, min, sec))
             print("=================================================")
@@ -58,7 +81,10 @@ while True:
 
                 print("{0} ( {1:.1f} km / {2:.1f} miles )".format(
                     path, distance/1000, distance/1000/1.61))
+                print("\nRoute History:")
 
+                for h in history:
+                    print(f"{h['from']} -> {h['to']} ({h['distance']:.1f} km)")
             print("=============================================")
         else:
             print("Error message: " + paths_data["message"])
