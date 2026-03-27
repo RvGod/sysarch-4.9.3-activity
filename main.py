@@ -1,6 +1,7 @@
 from config import key
 from geocode import geocoding
 from routing import get_route
+from utils import convert_distance, format_time, estimate_cost
 import webbrowser
 
 
@@ -31,7 +32,7 @@ while True:
     if loc2 in ["quit", "q"]:
         break
     dest = geocoding(loc2, key)
-
+    
     print("=================================================")
 
     if orig[0] == 200 and dest[0] == 200:
@@ -45,25 +46,33 @@ while True:
         print("=================================================")
 
         if paths_status == 200:
-        for i, path in enumerate(paths_data["paths"]):
-            km = path["distance"] / 1000
-            miles = km / 1.61
+            # Calculate distance and time
+            km, miles = convert_distance(paths_data["paths"][0]["distance"])
+            hr, min, sec = format_time(paths_data["paths"][0]["time"])
 
-            hr = int(path["time"]/1000/60/60)
-            min = int(path["time"]/1000/60 % 60)
-            sec = int(path["time"]/1000 % 60)
-
-            print("==============================================")
-            print(f"Route {i+1}:")
-            print("Distance: {0:.1f} km / {1:.1f} miles".format(km, miles))
+            print("Distance Traveled: {0:.1f} miles / {1:.1f} km".format(miles, km))
             print("Trip Duration: {0:02d}:{1:02d}:{2:02d}".format(hr, min, sec))
-            print("==============================================")
+            print("=================================================")
 
-            for instr in path["instructions"]:
-                step = instr["text"]
-                dist = instr["distance"]
-                print("{0} : {1:.1f} km / {2:.1f} miles".format(
-                    step, dist/1000, dist/1000/1.61))
+            # Print step-by-step directions
+            for each in paths_data["paths"][0]["instructions"]:
+                path_text = each["text"]
+                distance_km = each["distance"] / 1000
+                distance_miles = distance_km / 1.61
+                print(f"{path_text} ( {distance_km:.1f} km / {distance_miles:.1f} miles )")
+
+            # Estimate fuel/energy cost
+            if vehicle == "car":
+             try:
+              fuel_price = float(input("Enter fuel price per liter (₱): "))
+             except ValueError:
+              fuel_price = 0
+            else:
+             fuel_price = 0
+
+            trip_cost = estimate_cost(km, vehicle, fuel_price)
+            print(f"Estimated Trip Cost: ₱{trip_cost:.2f}")
+            print("=============================================")
 
             history.append({
                 "from": orig[3],
